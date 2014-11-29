@@ -1,0 +1,29 @@
+{
+  "name": "fs.plug",
+  "version": "0.0.1",
+  "description": "file system plug for plug.js framework",
+  "main": "fs.plug.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/influx6/fs.plug"
+  },
+  "keywords": [
+    "plug",
+    "plug.js",
+    "fs",
+    "file",
+    "system",
+    "plugs",
+    "filesystem.plugs",
+    "fs.plug"
+  ],
+  "author": "Alexander Adeniyin Ewetumo",
+  "license": "Mit",
+  "bugs": {
+    "url": "https://github.com/influx6/fs.plug/issues"
+  },
+  "homepage": "https://github.com/influx6/fs.plug"
+}
