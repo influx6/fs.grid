@@ -9,32 +9,29 @@ var _ = require("stackq"),
   framework
 */
 
-var fsp = module.exports = plug.Composable.make('fs');
-var Sack = fsp.Sack = _.FunctionStore.make('FunctionSack',function(fx,id,chan){
-  if(plug.SelectedChannel.isType(chan)) return chan.mutate(fx);
-});
+var fsp = module.exports = plug.Rack.make('fs');
 
-Sack.add('pathCleaner',function(d,next,end){
+fsp.registerMutator('pathCleaner',function(d,next,end){
   if(_.valids.not.contains(d.body,'file')) return;
   d.body.file = d.body.file.replace(/\s+/,'');
   return next(d);
 });
 
-Sack.add('srcCleaner',function(d,next,end){
+fsp.registerMutator('srcCleaner',function(d,next,end){
   if(_.valids.not.contains(d.body,'src')) return;
   d.body.file = d.body.src.replace(/\s+/,'');
   return next(d);
 });
 
-Sack.add('destCleaner',function(d,next,end){
+fsp.registerMutator('destCleaner',function(d,next,end){
   if(_.valids.not.contains(d.body,'dest')) return;
   d.body.file = d.body.dest.replace(/\s+/,'');
   return next(d);
 });
 
 fsp.registerPlug('dir.read',function(){
-  Sack.Q('pathCleaner',this.tasks());
-  this.channels.tasks.on(this.$bind(function(p){
+  fsp.Mutator('pathCleaner').bind(this.tasks());
+  this.tasks().on(this.$bind(function(p){
     var b = p.body, file = b.file, ps;
     if(_.valids.not.exists(file)) return;
     ps = path.resolve(file);
@@ -57,8 +54,8 @@ fsp.registerPlug('dir.read',function(){
 });
 
 fsp.registerPlug('dir.write',function(){
-  Sack.Q('pathCleaner',this.tasks());
-  this.channels.tasks.on(this.$bind(function(p){
+  fsp.Mutator('pathCleaner').bind(this.tasks());
+  this.tasks().on(this.$bind(function(p){
     var b = p.body, file = b.file, ps;
     if(_.valids.not.exists(file)) return;
     ps = path.resolve(file);
@@ -73,8 +70,8 @@ fsp.registerPlug('dir.write',function(){
 });
 
 fsp.registerPlug('dir.overwrite',function(){
-  Sack.Q('pathCleaner',this.tasks());
-  this.channels.tasks.on(this.$bind(function(p){
+  fsp.Mutator('pathCleaner').bind(this.tasks());
+  this.tasks().on(this.$bind(function(p){
     var b = p.body, file = b.file, ps;
     if(_.valids.not.exists(file)) return;
     ps = path.resolve(file);
@@ -89,8 +86,8 @@ fsp.registerPlug('dir.overwrite',function(){
 });
 
 fsp.registerPlug('dir.destroy',function(){
-  Sack.Q('pathCleaner',this.tasks());
-  this.channels.tasks.on(this.$bind(function(p){
+  fsp.Mutator('pathCleaner').bind(this.tasks());
+  this.tasks().on(this.$bind(function(p){
     var b = p.body, file = b.file, ps;
     if(_.valids.not.exists(file)) return;
     ps = path.resolve(file);
@@ -105,8 +102,8 @@ fsp.registerPlug('dir.destroy',function(){
 });
 
 fsp.registerPlug('file.check',function(){
-  Sack.Q('pathCleaner',this.tasks());
-  this.channels.tasks.on(this.$bind(function(p){
+  fsp.Mutator('pathCleaner').bind(this.tasks());
+  this.tasks().on(this.$bind(function(p){
     var b = p.body, file = b.file, ps;
     if(_.valids.not.exists(file)) return;
     ps = path.resolve(file);
@@ -120,8 +117,8 @@ fsp.registerPlug('file.check',function(){
 });
 
 fsp.registerPlug('file.read',function(){
-  Sack.Q('pathCleaner',this.tasks());
-  this.channels.tasks.on(this.$bind(function(p){
+  fsp.Mutator('pathCleaner').bind(this.tasks());
+  this.tasks().on(this.$bind(function(p){
     var b = p.body, file = b.file, ps;
     if(_.valids.not.String(file)) return;
     ps = path.resolve(file);
@@ -136,8 +133,8 @@ fsp.registerPlug('file.read',function(){
 });
 
 fsp.registerPlug('file.destroy',function(){
-  Sack.Q('pathCleaner',this.tasks());
-  this.channels.tasks.on(this.$bind(function(p){
+  fsp.Mutator('pathCleaner').bind(this.tasks());
+  this.tasks().on(this.$bind(function(p){
     var b = p.body, file = b.file, ps;
     if(_.valids.not.String(file)) return;
     ps = path.resolve(file);
@@ -152,8 +149,8 @@ fsp.registerPlug('file.destroy',function(){
 });
 
 fsp.registerPlug('stat',function(){
-  Sack.Q('pathCleaner',this.tasks());
-  this.channels.tasks.on(this.$bind(function(p){
+  fsp.Mutator('pathCleaner').bind(this.tasks());
+  this.tasks().on(this.$bind(function(p){
     var b = p.body, file = b.file, ps;
     if(_.valids.not.String(file)) return;
     ps = path.resolve(file);
@@ -167,8 +164,8 @@ fsp.registerPlug('stat',function(){
 });
 
 fsp.registerPlug('symlink.read',function(){
-  Sack.Q('pathCleaner',this.tasks());
-  this.channels.tasks.on(this.$bind(function(p){
+  fsp.Mutator('pathCleaner').bind(this.tasks());
+  this.tasks().on(this.$bind(function(p){
     var b = p.body, file = b.file, ps;
     if(_.valids.not.String(file)) return;
     ps = path.resolve(file);
@@ -183,9 +180,9 @@ fsp.registerPlug('symlink.read',function(){
 });
 
 fsp.registerPlug('symlink.write',function(){
-  Sack.Q('srcCleaner',this.tasks());
-  Sack.Q('destCleaner',this.tasks());
-  this.channels.tasks.on(this.$bind(function(p){
+  fsp.Mutator('srcCleaner').bind(this.tasks());
+  fsp.Mutator('destCleaner').bind(this.tasks());
+  this.tasks().on(this.$bind(function(p){
     var b = p.body, src = b.src, dest = b.dest;
     if(_.valids.not.String(src) || _.valids.not.String(dest)) return;
     var ps = path.resolve(src), pd = path.resolve(dest);
@@ -200,8 +197,8 @@ fsp.registerPlug('symlink.write',function(){
 });
 
 fsp.registerPlug('file.write.new',function(){
-  Sack.Q('pathCleaner',this.tasks());
-  this.channels.tasks.on(this.$bind(function(p){
+  fsp.Mutator('pathCleaner').bind(this.tasks());
+  this.tasks().on(this.$bind(function(p){
     var data = [],d = p.body, file = d.file, stream = p.stream,
     ops = _.funcs.extends({flag:'w'},d.options);
     if(_.valids.not.String(file)) return;
@@ -222,8 +219,8 @@ fsp.registerPlug('file.write.new',function(){
 });
 
 fsp.registerPlug('file.write.append',function(){
-  Sack.Q('pathCleaner',this.tasks());
-  this.channels.tasks.on(this.$bind(function(p){
+  fsp.Mutator('pathCleaner').bind(this.tasks());
+  this.tasks().on(this.$bind(function(p){
     var data = [],d = p.body, file = d.file, stream = p.stream,
     ops = _.funcs.extends({flag:'a'},d.options);
     if(_.valids.not.String(file)) return;
@@ -244,16 +241,16 @@ fsp.registerPlug('file.write.append',function(){
 });
 
 fsp.registerCompose('io',function(){
-  this.use('fs.stat','fs.stat','stat');
-  this.use('fs.symlink.write','symlink.write','symlinkWrite');
-  this.use('fs.symlink.read','symlink.read','symlinkRead');
-  this.use('fs.dir.read','dir.read','dirRead');
-  this.use('fs.dir.overwrite','dir.overwrite','dirOverwrite');
-  this.use('fs.dir.write','dir.write','dirWrite');
-  this.use('fs.dir.destroy','dir.destroy','dirDestroy');
-  this.use('fs.file.write.append','file.write.append','fileWriteAppend');
-  this.use('fs.file.write.new','file.write.new','fileWriteNew');
-  this.use('fs.file.destroy','file.destroy','fileDestroy');
-  this.use('fs.file.read','file.read','fileRead');
-  this.use('fs.file.check','file.check','fileCheck');
+  this.use(fsp.Plug('stat','fs.stat'),'stat');
+  this.use(fsp.Plug('symlink.write','symlink.write'),'symlinkWrite');
+  this.use(fsp.Plug('symlink.read','symlink.read'),'symlinkRead');
+  this.use(fsp.Plug('dir.read','dir.read'),'dirRead');
+  this.use(fsp.Plug('dir.overwrite','dir.overwrite'),'dirOverwrite');
+  this.use(fsp.Plug('dir.write','dir.write'),'dirWrite');
+  this.use(fsp.Plug('dir.destroy','dir.destroy'),'dirDestroy');
+  this.use(fsp.Plug('file.write.append','file.write.append'),'fileWriteAppend');
+  this.use(fsp.Plug('file.write.new','file.write.new'),'fileWriteNew');
+  this.use(fsp.Plug('file.destroy','file.destroy'),'fileDestroy');
+  this.use(fsp.Plug('file.read','file.read'),'fileRead');
+  this.use(fsp.Plug('file.check','file.check'),'fileCheck');
 });

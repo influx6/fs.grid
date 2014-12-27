@@ -4,7 +4,10 @@ var fs = require('../fs.plug.js');
 
 _.Jazz('fs.plug specification tests',function(n){
 
-  var grid = fs.createComposer('fs.plug.spec').use('grid.io','fs.io');
+  var grid = plug.Network.make('fs.plug.spec');
+  grid.crate(fs);
+
+  grid.use('fs/compose/io','grid.io');
   var io = grid.get('grid.io');
 
   n('can i read a file',function(k){
