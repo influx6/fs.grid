@@ -43,11 +43,11 @@ fsp.registerPlug('dir.read',function(){
         _.enums.each(body,function(e,i,o,fx){
           m.emit(e); return fx(null);
         },function(){
-          m.endData();
+          m.end();
         });
       }else{
         m.emit(body);
-        m.endData();
+        m.end();
       }
     }));
   }));
@@ -64,7 +64,7 @@ fsp.registerPlug('dir.write',function(){
       if(err) return this.Reply(file,err);
       var m = this.Reply(file,body);
       // m.emit(body);
-      m.endData();
+      m.end();
     }));
   }));
 });
@@ -80,7 +80,7 @@ fsp.registerPlug('dir.overwrite',function(){
       if(err) return this.Reply(file,err);
       var m = this.Reply(file,body);
       // m.emit(body);
-      m.endData();
+      m.end();
     }));
   }));
 });
@@ -96,7 +96,7 @@ fsp.registerPlug('dir.destroy',function(){
       if(err) return this.Reply(file,err);
       var m = this.Reply(file,body);
       // m.emit(body);
-      m.endData();
+      m.end();
     }));
   }));
 });
@@ -111,7 +111,7 @@ fsp.registerPlug('file.check',function(){
     fs.exists(ps,this.$bind(function(err,body){
       if(err) return this.Reply(file,err);
       var m = this.Reply(file,{file: ps, state: body});
-      m.endData();
+      m.end();
     }));
   }));
 });
@@ -122,13 +122,17 @@ fsp.registerPlug('file.read',function(){
     var b = p.body, file = b.file, ps;
     if(_.valids.not.String(file)) return;
     ps = path.resolve(file);
-    if(!fs.existsSync(file)) return this.Reply(ps,new Error(_.Util.String(' ',file,':[',ps,'] not Found')));
-    fs.readFile(ps,this.$bind(function(err,body){
-      if(err) return this.Reply(file,err);
-      var m = this.Reply(file,{ f:file, p: ps});
-      m.emit(body);
-      m.endData();
-    }));
+    var can = fs.existsSync(file);
+    if(can){
+      fs.readFile(ps,this.$bind(function(err,body){
+        if(err) return this.Reply(file,err);
+        var m = this.Reply(file,{ f:file, p: ps});
+        m.emit(body);
+        m.end();
+      }));
+    }else{
+      return this.Reply(ps,new Error(_.Util.String(' ',file,':',ps,' not Found')));
+    }
   }));
 });
 
@@ -143,7 +147,7 @@ fsp.registerPlug('file.destroy',function(){
       if(err) return this.Reply(file,err);
       var m = this.Reply(file,{ f:file, p: ps});
       m.emit(body);
-      m.endData();
+      m.end();
     }));
   }));
 });
@@ -158,7 +162,7 @@ fsp.registerPlug('stat',function(){
     fs.stat(ps,this.$bind(function(err,body){
       if(err) return this.Reply(file,err);
       var m = this.Reply(file,body);
-      m.endData();
+      m.end();
     }));
   }));
 });
@@ -174,7 +178,7 @@ fsp.registerPlug('symlink.read',function(){
       if(err) return this.Reply(file,err);
       var m = this.Reply(file,{ f:file, p: ps});
       m.emit(body);
-      m.endData();
+      m.end();
     }));
   }));
 });
@@ -191,7 +195,7 @@ fsp.registerPlug('symlink.write',function(){
       if(err) return this.Reply(file,err);
       var m = this.Reply(file,body);
       // m.emit(body);
-      m.endData();
+      m.end();
     }));
   }));
 });
@@ -199,7 +203,7 @@ fsp.registerPlug('symlink.write',function(){
 fsp.registerPlug('file.write.new',function(){
   fsp.Mutator('pathCleaner').bind(this.tasks());
   this.tasks().on(this.$bind(function(p){
-    var data = [],d = p.body, file = d.file, stream = p.stream,
+    var data = [],d = p.body, file = d.file, stream = p.stream(),
     ops = _.funcs.extends({flag:'w'},d.options);
     if(_.valids.not.String(file)) return;
     var ps = path.resolve(file);
@@ -221,7 +225,7 @@ fsp.registerPlug('file.write.new',function(){
 fsp.registerPlug('file.write.append',function(){
   fsp.Mutator('pathCleaner').bind(this.tasks());
   this.tasks().on(this.$bind(function(p){
-    var data = [],d = p.body, file = d.file, stream = p.stream,
+    var data = [],d = p.body, file = d.file, stream = p.stream(),
     ops = _.funcs.extends({flag:'a'},d.options);
     if(_.valids.not.String(file)) return;
     var ps = path.resolve(file);
@@ -240,7 +244,47 @@ fsp.registerPlug('file.write.append',function(){
   }));
 });
 
-fsp.registerCompose('io',function(){
+fsp.registerPlug('fs.Basefs',function(){
+
+  this.newTaskChannel('base.conf','fs.basefs.conf');
+
+  this.tasks().pause();
+
+  var base;
+
+  this.tasks('base.conf').on(this.$bind(function(p){
+    if(_.valids.not.containsKey(p.body,'base')) return;
+    var body = p.body;
+    delete body.chUID;
+    base = _.Util.clone(body);
+    base.base = path.normalize(body.base);
+    base.full = path.resolve(path.normalize(body.base));
+    this.config(base);
+    this.tasks('base.conf').lock();
+    this.tasks('base.conf').flush();
+    this.tasks().resume();
+  }));
+
+
+  this.tasks().on(this.$bind(function(p){
+    if(_.valids.not.containsKey(p.body,'task')) return;
+    if(_.valids.not.containsKey(p.body,'file')) return;
+    var body = p.body,
+        task = body.task,
+        file = body.file,
+        rf = path.join(base.base,file),
+        prf = path.resolve(rf),
+        and = prf.replace(base.full,'&');
+
+    if(and.substring(0,1) === '&'){
+      var f = this.Task(task,{file: file});
+      p.link(f);
+    }
+  }));
+
+});
+
+fsp.IO = plug.Network.make('io',function(){
   this.use(fsp.Plug('stat','fs.stat'),'stat');
   this.use(fsp.Plug('symlink.write','symlink.write'),'symlinkWrite');
   this.use(fsp.Plug('symlink.read','symlink.read'),'symlinkRead');

@@ -4,18 +4,16 @@ var fs = require('../fs.plug.js');
 
 _.Jazz('fs.plug specification tests',function(n){
 
-  var grid = plug.Network.make('fs.plug.spec');
-  grid.crate(fs);
+  var io = fs.IO;
 
-  grid.use('fs/compose/io','grid.io');
-  var io = grid.get('grid.io');
+  io.use(fs.Plug('fs.Basefs','fs.spec'),'base.fs');
 
   n('can i read a file',function(k){
     k.async(function(d,next,g){
       d.replies().on(g(function(f){
         _.Expects.truthy(f);
+        _.Expects.truthy(f.body);
         _.Expects.isString(f.message);
-        _.Expects.isObject(f.body);
       }));
       next();
     });
@@ -48,7 +46,7 @@ _.Jazz('fs.plug specification tests',function(n){
     .emit('praise my God, oh Zion, praise the Lord, Our God and King!')
     .emit('\n')
     .emit('\n')
-    .endData();
+    .end();
 
   });
 
@@ -61,6 +59,7 @@ _.Jazz('fs.plug specification tests',function(n){
       }));
       next();
     });
+
     k.for(io.get('fileWriteAppend'));
     io.Task('file.write.append',{ file: './poem.md'})
     .emit('#Forever oh God!,i wait for you!')
@@ -75,8 +74,60 @@ _.Jazz('fs.plug specification tests',function(n){
     .emit('in your presence oh God, Lord and father')
     .emit('\n')
     .emit('\n')
-    .endData();
+    .end();
 
   });
+
+  n('can i configure a base.fs to a directory',function(k){
+    k.async(function(d,next,g){
+      d.tasks('base.conf').on(g(function(t){
+        next();
+        _.Expects.truthy(plug.Packets.isTask(t));
+        _.Expects.is(t.body.base,'../specs/');
+      }));
+    });
+    k.for(io.get('base.fs'));
+    io.Task('fs.basefs.conf',{ base: '../specs/' });
+  });
+
+  n('can i get the task request from base.fs for a read op',function(k){
+
+    k.async(function(d,next,g){
+      d.tasks().on(g(function(t){
+        next();
+        _.Expects.truthy(plug.Packets.isTask(t));
+        _.Expects.truthy(t.body.file,'./poem.md');
+      }));
+    });
+
+    k.async(function(d,next,g){
+      d.replies().on(g(function(t){
+        next();
+        _.Expects.truthy(plug.Packets.isReply(t));
+        t.stream().on(g(function(k){
+          _.Expects.isInstanceOf(k,Buffer);
+        }));
+      }));
+    });
+
+    k.for(io.get('fileRead'));
+
+  });
+
+  n('can i read a file from base.fs',function(k){
+
+    k.async(function(d,next,g){
+      next();
+      d.tasks().on(g(function(t){
+        _.Expects.truthy(plug.Packets.isTask(t));
+      }));
+    });
+
+    k.for(io.get('base.fs'));
+    io.Task('fs.spec',{ task: 'file.read', file: './poem.md' });
+    io.Task('fs.spec',{ task: 'file.read', file: './coller/poem.md' });
+
+  });
+
 
 });
