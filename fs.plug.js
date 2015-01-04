@@ -37,8 +37,8 @@ fsp.registerPlug('dir.read',function(){
     ps = path.resolve(file);
     if(!fs.existSync(ps)) return this.Reply(ps,new Error(_.Util.String(' ',file,':(',ps,')not Found')));
     fs.readDir(ps,this.$bind(function(err,body){
-      if(err) return this.Reply(file,err);
-      var m = this.Reply(file,{ f:file, p: ps});
+      if(err) return this.ReplyFrom(p,err);
+      var m = this.ReplyFrom(p,{ f:file, p: ps});
       if(_valids.List(body)){
         _.enums.each(body,function(e,i,o,fx){
           m.emit(e); return fx(null);
@@ -61,8 +61,8 @@ fsp.registerPlug('dir.write',function(){
     ps = path.resolve(file);
     if(fs.existsSync(ps)) return this.Reply(ps,new Error(_.Util.String(' ',file,':(',ps,')not Found')));
     fs.mkdir(ps,this.$bind(function(err,body){
-      if(err) return this.Reply(file,err);
-      var m = this.Reply(file,body);
+      if(err) return this.ReplyFrom(p,err);
+      var m = this.ReplyFrom(p,body);
       // m.emit(body);
       m.end();
     }));
@@ -77,8 +77,8 @@ fsp.registerPlug('dir.overwrite',function(){
     ps = path.resolve(file);
     if(fs.existsSync(ps)) return this.Reply(ps,new Error(_.Util.String(' ',file,':(',ps,')not Found')));
     fs.mkdir(ps,this.$bind(function(err,body){
-      if(err) return this.Reply(file,err);
-      var m = this.Reply(file,body);
+      if(err) return this.ReplyFrom(p,err);
+      var m = this.ReplyFrom(p,body);
       // m.emit(body);
       m.end();
     }));
@@ -93,8 +93,8 @@ fsp.registerPlug('dir.destroy',function(){
     ps = path.resolve(file);
     if(!fs.existsSync(ps)) return this.Reply(ps,new Error(_.Util.String(' ',file,':(',ps,')not Found')));
     fs.rmdir(ps,this.$bind(function(err,body){
-      if(err) return this.Reply(file,err);
-      var m = this.Reply(file,body);
+      if(err) return this.ReplyFrom(p,err);
+      var m = this.ReplyFrom(p,body);
       // m.emit(body);
       m.end();
     }));
@@ -109,8 +109,8 @@ fsp.registerPlug('file.check',function(){
     ps = path.resolve(file);
     if(!fs.existsSync(ps)) return this.Reply(ps,new Error(b));
     fs.exists(ps,this.$bind(function(err,body){
-      if(err) return this.Reply(file,err);
-      var m = this.Reply(file,{file: ps, state: body});
+      if(err) return this.ReplyFrom(p,err);
+      var m = this.ReplyFrom(p,{file: ps, state: body});
       m.end();
     }));
   }));
@@ -125,13 +125,13 @@ fsp.registerPlug('file.read',function(){
     var can = fs.existsSync(file);
     if(can){
       fs.readFile(ps,this.$bind(function(err,body){
-        if(err){ return this.Reply(file,err); }
-        var m = this.Reply(file,{ f:file, p: ps});
+        if(err){ return this.ReplyFrom(p,err); }
+        var m = this.ReplyFrom(p,{ f:file, p: ps});
         m.emit(body);
         m.end();
       }));
     }else{
-      return this.Reply(ps,new Error(_.Util.String(' ',file,':',ps,' not Found')));
+      return this.ReplyFrom(p,new Error(_.Util.String(' ',file,':',ps,' not Found')));
     }
   }));
 });
@@ -144,8 +144,8 @@ fsp.registerPlug('file.destroy',function(){
     ps = path.resolve(file);
     if(!fs.existsSync(ps)) return this.Reply(ps,new Error(_.Util.String(' ',file,':(',ps,')not Found')));
     fs.unlink(ps,this.$bind(function(err,body){
-      if(err) return this.Reply(file,err);
-      var m = this.Reply(file,{ f:file, p: ps});
+      if(err) return this.ReplyFrom(p,err);
+      var m = this.ReplyFrom(p,{ f:file, p: ps});
       m.emit(body);
       m.end();
     }));
@@ -160,8 +160,8 @@ fsp.registerPlug('stat',function(){
     ps = path.resolve(file);
     if(!fs.existsSync(ps)) return this.Reply(ps,new Error(_.Util.String(' ',file,':(',ps,')not Found')));
     fs.stat(ps,this.$bind(function(err,body){
-      if(err) return this.Reply(file,err);
-      var m = this.Reply(file,body);
+      if(err) return this.ReplyFrom(p,err);
+      var m = this.ReplyFrom(p,body);
       m.end();
     }));
   }));
@@ -173,10 +173,10 @@ fsp.registerPlug('symlink.read',function(){
     var b = p.body, file = b.file, ps;
     if(_.valids.not.String(file)) return;
     ps = path.resolve(file);
-    if(!fs.existsSync(ps)) return this.Reply(ps,new Error(_.Util.String(' ',file,':(',ps,')not Found')));
+    if(!fs.existsSync(ps)) return this.ReplyFrom(p,new Error(_.Util.String(' ',file,':(',ps,')not Found')));
     fs.readlink(ps,this.$bind(function(err,body){
-      if(err) return this.Reply(file,err);
-      var m = this.Reply(file,{ f:file, p: ps});
+      if(err) return this.ReplyFrom(p,err);
+      var m = this.ReplyFrom(p,{ f:file, p: ps});
       m.emit(body);
       m.end();
     }));
@@ -192,8 +192,8 @@ fsp.registerPlug('symlink.write',function(){
     var ps = path.resolve(src), pd = path.resolve(dest);
     if(!fs.existsSync(ps)) return this.Reply(ps,new Error(_.Util.String(' ',file,':(',ps,')not Found')));
     fs.link(ps,pd,this.$bind(function(err,body){
-      if(err) return this.Reply(file,err);
-      var m = this.Reply(file,body);
+      if(err) return this.ReplyFrom(p,err);
+      var m = this.ReplyFrom(p,body);
       m.emit(body);
       m.end();
     }));
@@ -215,8 +215,8 @@ fsp.registerPlug('file.write.new',function(){
 
     stream.afterEvent('dataEnd',this.$bind(function(){
       fs.writeFile(ps,data.join(''),ops,this.$bind(function(err,d){
-        if(err) return this.Reply(file,err);
-        return this.Reply(file,{f:file, res: d});
+        if(err) return this.ReplyFrom(p,err);
+        return this.ReplyFrom(p,{f:file, res: d});
       }));
     }));
 
@@ -237,8 +237,8 @@ fsp.registerPlug('file.write.append',function(){
 
     stream.afterEvent('dataEnd',this.$bind(function(){
       fs.appendFile(ps,data.join(''),ops,this.$bind(function(err,d){
-        if(err) return this.Reply(file,err);
-        return this.Reply(file,{f:file, res: d});
+        if(err) return this.ReplyFrom(p,err);
+        return this.ReplyFrom(p,{f:file, res: d});
       }));
     }));
 
