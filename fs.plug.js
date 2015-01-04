@@ -125,7 +125,7 @@ fsp.registerPlug('file.read',function(){
     var can = fs.existsSync(file);
     if(can){
       fs.readFile(ps,this.$bind(function(err,body){
-        if(err) return this.Reply(file,err);
+        if(err){ return this.Reply(file,err); }
         var m = this.Reply(file,{ f:file, p: ps});
         m.emit(body);
         m.end();
@@ -194,7 +194,7 @@ fsp.registerPlug('symlink.write',function(){
     fs.link(ps,pd,this.$bind(function(err,body){
       if(err) return this.Reply(file,err);
       var m = this.Reply(file,body);
-      // m.emit(body);
+      m.emit(body);
       m.end();
     }));
   }));
@@ -202,6 +202,7 @@ fsp.registerPlug('symlink.write',function(){
 
 fsp.registerPlug('file.write.new',function(){
   fsp.Mutator('pathCleaner').bind(this.tasks());
+
   this.tasks().on(this.$bind(function(p){
     var data = [],d = p.body, file = d.file, stream = p.stream(),
     ops = _.funcs.extends({flag:'w'},d.options);
@@ -297,4 +298,36 @@ fsp.IO = plug.Network.make('io',function(){
   this.use(fsp.Plug('file.destroy','file.destroy'),'fileDestroy');
   this.use(fsp.Plug('file.read','file.read'),'fileRead');
   this.use(fsp.Plug('file.check','file.check'),'fileCheck');
+});
+
+var netIO = plug.Network.make('fs.io',function(){
+  this.use(fsp.Plug('fs.Basefs','io.base'),'io.base');
+  this.use(fsp.Plug('dir.read','dir.read'),'dir.read');
+  this.use(fsp.Plug('dir.overwrite','dir.overwrite'),'dir.overwrite');
+  this.use(fsp.Plug('dir.write','dir.write'),'dir.write');
+  this.use(fsp.Plug('dir.destroy','dir.destroy'),'dir.destroy');
+  this.use(fsp.Plug('file.write.append','file.write.append'),'file.write.append');
+  this.use(fsp.Plug('file.write.new','file.write.new'),'file.write.new');
+  this.use(fsp.Plug('file.destroy','file.destroy'),'file.destroy');
+  this.use(fsp.Plug('file.read','file.read'),'file.read');
+  this.use(fsp.Plug('file.check','file.check'),'file.check');
+});
+
+fsp.registerPlug('fs.ioControl',function(){
+
+  this.newTaskChannel('io.conf','io.control.conf');
+
+  this.attachNetwork(netIO);
+  this.networkOut(this.replies());
+
+  var net = this.exposeNetwork();
+  this.tasks('io.conf').on(this.$bind(function(p){
+    var f = net.Task('fs.basefs.conf',p.body);
+    p.link(f);
+  }));
+  this.tasks().on(this.$bind(function(p){
+    var f = net.Task('io.base',p.body);
+    p.link(f);
+  }));
+
 });

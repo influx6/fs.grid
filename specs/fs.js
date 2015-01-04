@@ -10,12 +10,12 @@ _.Jazz('fs.plug specification tests',function(n){
 
   n('can i read a file',function(k){
     k.async(function(d,next,g){
+      next();
       d.replies().on(g(function(f){
         _.Expects.truthy(f);
         _.Expects.truthy(f.body);
         _.Expects.isString(f.message);
       }));
-      next();
     });
     k.for(io.get('fileRead'));
     io.Task('file.read',{ file: '../fs.plug.js '});
@@ -31,6 +31,7 @@ _.Jazz('fs.plug specification tests',function(n){
       next();
     });
     k.for(io.get('fileWriteNew'));
+
     io.Task('file.write.new',{ file: './poem.md'})
     .emit('#oh God!,i Seek you!')
     .emit('\n')
@@ -53,11 +54,11 @@ _.Jazz('fs.plug specification tests',function(n){
   n('can i append to a file',function(k){
     k.async(function(d,next,g){
       d.replies().on(g(function(f){
+        next();
         _.Expects.truthy(f);
         _.Expects.isString(f.message);
         _.Expects.isObject(f.body);
       }));
-      next();
     });
 
     k.for(io.get('fileWriteAppend'));
@@ -94,6 +95,7 @@ _.Jazz('fs.plug specification tests',function(n){
 
     k.async(function(d,next,g){
       d.tasks().on(g(function(t){
+        console.log('task:',t.message,t.body);
         next();
         _.Expects.truthy(plug.Packets.isTask(t));
         _.Expects.truthy(t.body.file,'./poem.md');
@@ -102,6 +104,7 @@ _.Jazz('fs.plug specification tests',function(n){
 
     k.async(function(d,next,g){
       d.replies().on(g(function(t){
+        console.log('reply:',t.message,t.body);
         next();
         _.Expects.truthy(plug.Packets.isReply(t));
         t.stream().on(g(function(k){
@@ -125,7 +128,7 @@ _.Jazz('fs.plug specification tests',function(n){
 
     k.for(io.get('base.fs'));
     io.Task('fs.spec',{ task: 'file.read', file: './poem.md' });
-    io.Task('fs.spec',{ task: 'file.read', file: './coller/poem.md' });
+    io.Task('fs.spec',{ task: 'file.read', file: '../coller/../poem.md' });
 
   });
 
