@@ -18,7 +18,7 @@ _.Jazz('fs.plug specification tests',function(n){
       }));
     });
     k.for(ioc);
-    grid.Task('io.control.conf',{ base: '../specs/' });
+    grid.Task.make('io.control.conf',{ base: '../specs/' });
   });
 
   n('can i get the task request from base.fs for a read op',function(k){
@@ -56,8 +56,8 @@ _.Jazz('fs.plug specification tests',function(n){
 
     k.for(ioc);
 
-    grid.Task('io.base',{ task: 'file.read', file: './poem.md' });
-    grid.Task('io.base',{ task: 'file.read', file: './coller/../poem.md' });
+    grid.Task.make('io.base',{ task: 'file.read', file: './poem.md' });
+    grid.Task.make('io.base',{ task: 'file.read', file: './coller/../poem.md' });
 
   });
 
