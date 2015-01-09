@@ -37,17 +37,21 @@
   These require that tasks have their meta in this format: { file: path_to_file } eg. 
     a plug of any of these, tagged as 'reader'
 
-          ```javascript
-                plug.Tasks.make('reader',{ file: './locator.js' })
-          ```  
+    ```javascript
+    
+        plug.Tasks.make('reader',{ file: './locator.js' })
+        
+    ```  
 
 * Symlink.Write: 
   It require that tasks have their meta in this format: { src: path_for_linking , dest: path_to_link } eg. 
     a plug for symlink.write tagged as 'sym.commander'
 
-          ```javascript
-                plug.Tasks.make('sym.commander',{ src: './root/box', desc: './fluxter/boombox' })
-          ```  
+    ```javascript
+    
+        plug.Tasks.make('sym.commander',{ src: './root/box', desc: './fluxter/boombox' })
+        
+    ```  
 
 * Fs.ioControl: 
  This type of plug comes with two task channels, one for configuration and the other for io tasks proxying. The configuration channel is tagged: 'io.control.conf' and when it receives a valid tasks with format { base: path_base} it resumes its default task channel and checks for all tasks with meta format { task: 'fs_task', file: 'path_wanted' }, if the file parameter is within its set roots,it creates a new task with the task and file path as the body from the meta object and sends it off into its internal network that contains all [Fs.Plug][fs.url]. Usually you would want only one of these in your network but you can use as many as possible,once its configuration its set,its never changes,so you don't even need to bother about who is restricting to what path,add all the number of directories you want to lock to,each will immediately on get the first task,set and lock itself to that while the rest peek the remaining packets setting themselves.
@@ -55,13 +59,13 @@
  Internal Channels: (1 total)
   * io.Control.conf -> *used for setting configuration,i.e the base root for guarding with*
  
-          ```javascript
+      ```javascript
           
-                plug.Tasks.make('io.control.conf',{ base: './root/box' })
+          plug.Tasks.make('io.control.conf',{ base: './root/box' })
                 
-                //with io.Control tagged 'io.Commander'
-                plug.Tasks.make('io.Commander',{ task: 'file.read', file:'red.txt' });
+          //with io.Control tagged 'io.Commander'
+          plug.Tasks.make('io.Commander',{ task: 'file.read', file:'red.txt' });
                 
-          ```  
+      ```  
 
 [fs.url]: https://github.com/influx6/fs.plug
