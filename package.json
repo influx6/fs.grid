@@ -1,13 +1,15 @@
 {
   "name": "fs.plug",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "file system plug for plug.js framework",
   "main": "./fs.plug.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies":{
-    "graceful-fs": ">=0.3.x"
+    "graceful-fs": ">=0.3.x",
+    "stackq":">=0.1.8",
+    "plugd":">=0.0.11"
   },
   "repository": {
     "type": "git",

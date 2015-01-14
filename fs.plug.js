@@ -9,7 +9,42 @@ var _ = require("stackq"),
   framework
 */
 
+
 var fsp = module.exports = plug.Rack.make('fs');
+
+var isPathAbsolute = fsp.isAbsolutePath = function(file){
+ if(_.valids.not.String(file)) return;
+ var n = path.normalize(file),
+ r = path.resolve(file),
+ nr = n.replace(/(.+)([\/|\\])$/,'$1');
+ return r === nr;
+};
+
+var profilePath = fsp.profilePath = function(base,file,fz){
+  var rf = (isPathAbsolute(file) ? file : path.join(base,file)),
+    full = fz || path.normalize(path.resolve(base)),
+    prf = path.resolve(rf),
+    and = prf.replace(full,'&');
+
+    return {
+       state: and.substring(0,1),
+       full: full,
+       file: file,
+       base: base,
+       res: prf,
+    };
+};
+
+var checkProfile = fsp.checkProfile = function(profile){
+  return stacks.valids.exists(profile) ? profile.state : false;
+};
+
+fsp.registerMutator('absoluteValidator',function(d,next,end){
+  if(_.valids.not.contains(d.body,'file')) return;
+  d.body.file = d.body.file.replace(/\s+/,'');
+  d.body.isAbsolute = isPathAbsolute(file);
+  return next(d);
+});
 
 fsp.registerMutator('pathCleaner',function(d,next,end){
   if(_.valids.not.contains(d.body,'file')) return;
@@ -35,18 +70,18 @@ fsp.registerPlug('dir.read',function(){
     var b = p.body, file = b.file, ps;
     if(_.valids.not.exists(file)) return;
     ps = path.resolve(file);
-    if(!fs.existSync(ps)){
+    if(!fs.existsSync(ps)){
       var r = plug.ReplyPackets.from(p,new Error(_.Util.String(' ',file,':',ps,' not Found')));
       this.emitPacket(r);
       return;
     }
 
-    fs.readDir(ps,this.$bind(function(err,body){
+    fs.readdir(ps,this.$bind(function(err,body){
       if(err){ return this.emitPacket(plug.ReplyPackets.from(p,err));}
       var m = this.emitPacket(plug.ReplyPackets.from(p,{ f:file, p: ps}));
-      if(_valids.List(body)){
+      if(_.valids.List(body)){
         _.enums.each(body,function(e,i,o,fx){
-          m.emit(e); return fx(null);
+          m.emit({id: e, file: path.resolve(ps,e)}); return fx(null);
         },function(){
           m.end();
         });
@@ -71,6 +106,9 @@ fsp.registerPlug('dir.write',function(){
     fs.mkdir(ps,this.$bind(function(err,body){
       if(err){ return this.emitPacket(plug.ReplyPackets.from(p,err));}
       var m = this.emitPacket(plug.ReplyPackets.from(p,{ f:file, p: ps}));
+
+      // var content = p.stream();
+
       m.end();
     }));
   }));
@@ -271,7 +309,7 @@ fsp.registerPlug('file.write.append',function(){
 
 fsp.registerPlug('fs.Basefs',function(){
 
-  this.newTaskChannel('base.conf','fs.basefs.conf');
+  this.newTask('base.conf','fs.basefs.conf');
 
   this.tasks().pause();
 
@@ -294,21 +332,23 @@ fsp.registerPlug('fs.Basefs',function(){
   this.tasks().on(this.$bind(function(p){
     if(_.valids.not.containsKey(p.body,'task')) return;
     if(_.valids.not.containsKey(p.body,'file')) return;
+
     var body = p.body,
         task = body.task,
         file = body.file,
-        rf = path.join(base.base,file),
-        prf = path.resolve(rf),
-        and = prf.replace(base.full,'&');
+        profile = profilePath(base.base,file);
+        // rf = isPathAbsolute(file) ? file : path.join(base.base,file),
+        // prf = path.resolve(rf),
+        // and = prf.replace(base.full,'&');
 
-    if(and.substring(0,1) === '&'){
-       var f = this.emitPacket(plug.TaskPackets.clone(p,task,{ file: prf }));
+    if(profile.state){
+       var f = this.emitPacket(plug.TaskPackets.clone(p,task,{ file: profile.res, profile: profile }));
     }
   }));
 
 });
 
-fsp.IO = plug.Network.make('io',function(){
+fsp.IO = plug.Network.blueprint(function(){
   this.use(fsp.Plug('stat','fs.stat'),'stat');
   this.use(fsp.Plug('symlink.write','symlink.write'),'symlinkWrite');
   this.use(fsp.Plug('symlink.read','symlink.read'),'symlinkRead');
@@ -323,7 +363,7 @@ fsp.IO = plug.Network.make('io',function(){
   this.use(fsp.Plug('file.check','file.check'),'fileCheck');
 });
 
-var netIO = plug.Network.make('fs.io',function(){
+fsp.baseIO = plug.Network.blueprint(function(){
   this.use(fsp.Plug('fs.Basefs','io.base'),'io.base');
   this.use(fsp.Plug('dir.read','dir.read'),'dir.read');
   this.use(fsp.Plug('dir.overwrite','dir.overwrite'),'dir.overwrite');
@@ -338,18 +378,18 @@ var netIO = plug.Network.make('fs.io',function(){
 
 fsp.registerPlug('fs.ioControl',function(){
 
-  this.newTaskChannel('io.conf','io.control.conf');
+  var net = fsp.baseIO('io.controller');
+  this.newTask('io.conf','io.control.conf');
 
-  this.attachNetwork(netIO);
+  this.attachNetwork(net);
   this.networkOut(this.replies());
 
   var net = this.exposeNetwork();
   this.tasks('io.conf').on(this.$bind(function(p){
-    var f = net.Task('fs.basefs.conf',p.body);
-    this.emitPacket(plug.TaskPackets.clone(p,'fs.basefs.conf'));
+    net.emitPacket(plug.TaskPackets.clone(p,'fs.basefs.conf'));
   }));
   this.tasks().on(this.$bind(function(p){
-    this.emitPacket(plug.TaskPackets.clone(p,'io.base'));
+    net.emitPacket(plug.TaskPackets.clone(p,'io.base'));
   }));
 
 });
