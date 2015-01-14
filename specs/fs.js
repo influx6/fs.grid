@@ -4,7 +4,7 @@ var fs = require('../fs.plug.js');
 
 _.Jazz('fs.plug specification tests',function(n){
 
-  var io = fs.IO;
+  var io = fs.IO('io');
 
   io.use(fs.Plug('fs.Basefs','fs.spec'),'base.fs');
 
@@ -97,19 +97,17 @@ _.Jazz('fs.plug specification tests',function(n){
     k.sync(function(d,g){
       console.log('grid it');
       d.tasks().on(g(function(t){
-        console.log('got tsk',t.toString());
-        // _.Expects.truthy(plug.Packets.isTask(t));
-        // _.Expects.truthy(t.body.file,'./poem.md');
+        _.Expects.truthy(plug.Packets.isTask(t));
+        _.Expects.truthy(t.body.file,'./poem.md');
       }));
     });
 
     k.sync(function(d,g){
       d.replies().on(g(function(t){
-        console.log('got tsk',t);
-        // _.Expects.truthy(plug.Packets.isReply(t));
-        // t.stream().on(g(function(k){
-        //   _.Expects.isInstanceOf(k,Buffer);
-        // }));
+        _.Expects.truthy(plug.Packets.isReply(t));
+        t.stream().on(g(function(k){
+          _.Expects.isInstanceOf(k,Buffer);
+        }));
       }));
     });
 

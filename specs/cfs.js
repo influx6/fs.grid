@@ -5,7 +5,7 @@ var fs = require('../fs.plug.js');
 _.Jazz('fs.plug specification tests',function(n){
 
   var grid = plug.Network.make('control.io');
-  grid.use(fs.Plug('fs.ioControl','io.base'),'io.fs');
+  grid.use(fs.Plug('fs.iocontrol','io.base'),'io.fs');
 
   var ioc = grid.get('io.fs'), io = ioc.exposeNetwork();
 

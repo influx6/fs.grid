@@ -24,14 +24,25 @@ var profilePath = fsp.profilePath = function(base,file,fz){
   var rf = (isPathAbsolute(file) ? file : path.join(base,file)),
     full = fz || path.normalize(path.resolve(base)),
     prf = path.resolve(rf),
-    and = prf.replace(full,'&');
+    and = prf.replace(full,'&'),
+    valid = and.substring(0,1) === '&',
+    stat;
+
+    if(valid){
+      try{
+       stat = fs.statSync(prf);
+      }catch(e){
+       stat = null;
+      }
+    };
 
     return {
-       state: and.substring(0,1),
+       state: valid,
        full: full,
        file: file,
        base: base,
        res: prf,
+       stat: stat,
     };
 };
 
@@ -307,7 +318,7 @@ fsp.registerPlug('file.write.append',function(){
   }));
 });
 
-fsp.registerPlug('fs.Basefs',function(){
+fsp.registerPlug('fs.basefs',function(){
 
   this.newTask('base.conf','fs.basefs.conf');
 
@@ -364,7 +375,7 @@ fsp.IO = plug.Network.blueprint(function(){
 });
 
 fsp.baseIO = plug.Network.blueprint(function(){
-  this.use(fsp.Plug('fs.Basefs','io.base'),'io.base');
+  this.use(fsp.Plug('fs.basefs','fs.basefs'),'io.base');
   this.use(fsp.Plug('dir.read','dir.read'),'dir.read');
   this.use(fsp.Plug('dir.overwrite','dir.overwrite'),'dir.overwrite');
   this.use(fsp.Plug('dir.write','dir.write'),'dir.write');
@@ -376,10 +387,10 @@ fsp.baseIO = plug.Network.blueprint(function(){
   this.use(fsp.Plug('file.check','file.check'),'file.check');
 });
 
-fsp.registerPlug('fs.ioControl',function(){
+fsp.registerPlug('fs.iocontrol',function(){
 
   var net = fsp.baseIO('io.controller');
-  this.newTask('io.conf','io.control.conf');
+  this.newTask('io.conf','fs.iocontrol.conf');
 
   this.attachNetwork(net);
   this.networkOut(this.replies());
@@ -389,7 +400,117 @@ fsp.registerPlug('fs.ioControl',function(){
     net.emitPacket(plug.TaskPackets.clone(p,'fs.basefs.conf'));
   }));
   this.tasks().on(this.$bind(function(p){
-    net.emitPacket(plug.TaskPackets.clone(p,'io.base'));
+    net.emitPacket(plug.TaskPackets.clone(p,'fs.basefs'));
+  }));
+
+});
+
+fsp.controlIO = plug.Network.blueprint(function(){
+  this.use(fsp.Plug('fs.iocontrol'),'io.controller');
+});
+
+fsp.registerPlug('fs.iodirect',function(){
+
+  var net = fsp.controlIo('io.controller'), ior = stacks.Util.guid();
+
+  this.attachNetwork(net);
+  this.networkOut(this.replies());
+
+  this.newTask('conf',this.makeName('conf'));
+  this.newTask('appender',this.makeName('append'));
+  this.newTask('eraser',this.makeName('remove'));
+  this.newTask('reader',this.makeName('reader'));
+  this.newTask('writer',this.makeName('writer'));
+  this.newTask('checker',this.makeName('checker'));
+
+  this.tasks('conf').on(this.$bind(function(p){
+    if(stacks.valids.not.contains(p.body,'base')) return;
+    net.Task.clone(p,'fs.iocontrol.conf');
+  }));
+
+  this.tasks('eraser').on(this.$bind(function(p){
+    if(stacks.valids.not.contains(p.body,'file')) return;
+    var body = p.body, file = body.file, profile = fsp.profilePath(base,file);
+
+    if(profile.stat){
+      if(profile.stat.isFile()){
+        p.link(net.Tasks.make(p,'fs.iocontrol',{ task: 'file.destroy', file: file , uuid: p.uuid},ior));
+      }
+      if(profile.stat.isDirectory()){
+        p.link(net.Tasks.make(p,'fs.iocontrol',{ task: 'dir.destroy', file: file , uuid: p.uuid},ior));
+      }
+    }else{
+      this.Reply.from(p,'fs.iodirect.error');
+    }
+
+  }));
+
+  this.tasks('writer').on(this.$bind(function(p){
+    if(stacks.valids.not.contains(p.body,'file')) return;
+    var body = p.body, file = body.file, profile = fsp.profilePath(base,file);
+
+    if(profile.stat){
+      if(profile.stat.isFile()){
+        p.link(net.Tasks.make(p,'fs.iocontrol',{ task: 'file.check', file: file , uuid: p.uuid},ior));
+      }
+      if(profile.stat.isDirectory()){
+        p.link(net.Tasks.make(p,'fs.iocontrol',{ task: 'file.check', file: file , uuid: p.uuid},ior));
+      }
+    }else{
+      this.Reply.from(p,'fs.iodirect.error');
+    }
+
+  }));
+
+  this.tasks('writer').on(this.$bind(function(p){
+    if(stacks.valids.not.contains(p.body,'file')) return;
+    var body = p.body, file = body.file, profile = fsp.profilePath(base,file);
+
+    if(profile.stat){
+      if(profile.stat.isFile()){
+        p.link(net.Tasks.make(p,'fs.iocontrol',{ task: 'file.write', file: file , uuid: p.uuid},ior));
+      }
+      if(profile.stat.isDirectory()){
+        p.link(net.Tasks.make(p,'fs.iocontrol',{ task: 'dir.write', file: file , uuid: p.uuid},ior));
+      }
+    }else{
+      this.Reply.from(p,'fs.iodirect.error');
+    }
+
+  }));
+
+  this.tasks('append').on(this.$bind(function(p){
+    if(stacks.valids.not.contains(p.body,'file')) return;
+    var body = p.body, file = body.file, profile = fsp.profilePath(base,file);
+
+    if(profile.stat){
+      if(profile.stat.isFile()){
+        p.link(net.Tasks.make(p,'fs.iocontrol',{ task: 'file.append', file: file , uuid: p.uuid},ior));
+      }
+      if(profile.stat.isDirectory()){
+        p.link(net.Tasks.make(p,'fs.iocontrol',{ task: 'dir.write', file: file , uuid: p.uuid},ior));
+      }
+    }else{
+      this.Reply.from(p,'fs.iodirect.error');
+    }
+
+  }));
+
+  this.tasks('reader').on(this.$bind(function(p){
+    if(stacks.valids.not.contains(p.body,'file')) return;
+    var body = p.body, file = body.file, profile = fsp.profilePath(base,file);
+
+    if(profile.stat){
+      if(profile.stat.isFile()){
+        p.link(net.Tasks.make(p,'fs.iocontrol',{ task: 'file.read', file: file , uuid: p.uuid},ior));
+      }
+      if(profile.stat.isDirectory()){
+        p.link(net.Tasks.make(p,'fs.iocontrol',{ task: 'dir.read', file: file , uuid: p.uuid},ior));
+      }
+    }else{
+      this.Reply.from(p,'fs.iodirect.error');
+    }
+
   }));
 
 });
