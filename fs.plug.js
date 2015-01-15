@@ -423,12 +423,8 @@ fsp.registerPlug('io.iocontrol',function(){
     var f = net.emitPacket(plug.TaskPackets.clone(p,'fs.base.conf'));
   }));
 
-  console.log('task id:',this.tasks().id);
-
   this.tasks().on(this.$bind(function(p){
-    console.log('sending task:',p.message,p.body,p.Meta);
     var f = net.emitPacket(plug.TaskPackets.clone(p,'fs.base'));
-    console.log('sent:',f.Meta);
   }));
 
 });
@@ -470,10 +466,10 @@ fsp.registerPlug('io.iodirect',function(){
 
     if(profile.stat){
       if(profile.stat.isFile()){
-        p.link(net.Task.make('io.iocontrol',{ task: 'file.destroy', file: file , uuid: p.uuid},ior));
+        p.link(net.Task.make('io.iocontrol',{ task: 'file.destroy', file: file , puid: p.uuid},ior));
       }
       if(profile.stat.isDirectory()){
-        p.link(net.Task.make('io.iocontrol',{ task: 'dir.destroy', file: file , uuid: p.uuid},ior));
+        p.link(net.Task.make('io.iocontrol',{ task: 'dir.destroy', file: file , puid: p.uuid},ior));
       }
     }else{
       this.Reply.from(p,'io.iodirect.error');
@@ -487,10 +483,10 @@ fsp.registerPlug('io.iodirect',function(){
 
     if(profile.stat){
       if(profile.stat.isFile()){
-        p.link(net.Task.make('io.iocontrol',{ task: 'io.profile', file: file , uuid: p.uuid},ior));
+        p.link(net.Task.make('io.iocontrol',{ task: 'io.profile', file: file , puid: p.uuid},ior));
       }
       if(profile.stat.isDirectory()){
-        p.link(net.Task.make('io.iocontrol',{ task: 'io.profile', file: file , uuid: p.uuid},ior));
+        p.link(net.Task.make('io.iocontrol',{ task: 'io.profile', file: file , puid: p.uuid},ior));
       }
     }else{
       this.Reply.from(p,'io.iodirect.error');
@@ -503,10 +499,10 @@ fsp.registerPlug('io.iodirect',function(){
 
     if(profile.stat){
       if(profile.stat.isFile()){
-        p.link(net.Task.make('io.iocontrol',{ task: 'io.check', file: file , uuid: p.uuid},ior));
+        p.link(net.Task.make('io.iocontrol',{ task: 'io.check', file: file , puid: p.uuid},ior));
       }
       if(profile.stat.isDirectory()){
-        p.link(net.Task.make('io.iocontrol',{ task: 'io.check', file: file , uuid: p.uuid},ior));
+        p.link(net.Task.make('io.iocontrol',{ task: 'io.check', file: file , puid: p.uuid},ior));
       }
     }else{
       this.Reply.from(p,'io.iodirect.error');
@@ -519,10 +515,10 @@ fsp.registerPlug('io.iodirect',function(){
 
     if(profile.stat){
       if(profile.stat.isFile()){
-        p.link(net.Task.make('io.iocontrol',{ task: 'file.write', file: file , uuid: p.uuid},ior));
+        p.link(net.Task.make('io.iocontrol',{ task: 'file.write', file: file , puid: p.uuid},ior));
       }
       if(profile.stat.isDirectory()){
-        p.link(net.Task.make('io.iocontrol',{ task: 'dir.write', file: file , uuid: p.uuid},ior));
+        p.link(net.Task.make('io.iocontrol',{ task: 'dir.write', file: file , puid: p.uuid},ior));
       }
     }else{
       this.Reply.from(p,'io.iodirect.error');
@@ -536,10 +532,10 @@ fsp.registerPlug('io.iodirect',function(){
 
     if(profile.stat){
       if(profile.stat.isFile()){
-        p.link(net.Task.make('io.iocontrol',{ task: 'file.append', file: file , uuid: p.uuid},ior));
+        p.link(net.Task.make('io.iocontrol',{ task: 'file.append', file: file , puid: p.uuid},ior));
       }
       if(profile.stat.isDirectory()){
-        p.link(net.Task.make('io.iocontrol',{ task: 'dir.write', file: file , uuid: p.uuid},ior));
+        p.link(net.Task.make('io.iocontrol',{ task: 'dir.write', file: file , puid: p.uuid},ior));
       }
     }else{
       this.Reply.from(p,'io.iodirect.error');
@@ -553,10 +549,10 @@ fsp.registerPlug('io.iodirect',function(){
 
     if(profile.stat){
       if(profile.stat.isFile()){
-        p.link(net.Task.make('io.iocontrol',{ task: 'file.read', file: file , uuid: p.uuid},ior));
+        p.link(net.Task.make('io.iocontrol',{ task: 'file.read', file: file , puid: p.uuid},ior));
       }
       if(profile.stat.isDirectory()){
-        p.link(net.Task.make('io.iocontrol',{ task: 'dir.read', file: file , uuid: p.uuid},ior));
+        p.link(net.Task.make('io.iocontrol',{ task: 'dir.read', file: file , puid: p.uuid},ior));
       }
     }else{
       this.Reply.from(p,'io.iodirect.error');
@@ -565,7 +561,7 @@ fsp.registerPlug('io.iodirect',function(){
   }));
 
   this.replies('ro').on(this.$bind(function(p){
-    console.log('reply',p.message,p.toString());
+    this.Reply.clone(p,p.Meta.puid);
   }));
 
 });

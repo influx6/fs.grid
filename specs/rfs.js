@@ -20,6 +20,23 @@ _.Jazz('fs.plug specification tests',function(n){
     grid.Task.make('io.iodirect.conf',{ base: '../specs/' });
   });
 
+  var pid = '4321-31';
+
+  n('can i read a file from base.fs',function(k){
+
+    k.async(function(d,next,g){
+      d.on(g(function(t){
+        console.log('reply',t.body,t.message);
+        next();
+        _.Expects.truthy(plug.Packets.isReply(t));
+      }));
+    });
+
+    var ch = grid.watch(pid);
+    k.for(ch);
+
+  });
+
   n('can i read a file from base.fs',function(k){
 
     k.async(function(d,next,g){
@@ -30,10 +47,8 @@ _.Jazz('fs.plug specification tests',function(n){
     });
 
     k.for(ioc);
-
-    grid.Task.make('io.iodirect.read',{ file: './poem.md' });
+    grid.Task.make('io.iodirect.read',{ file: './poem.md' },pid);
 
   });
-
 
 });
