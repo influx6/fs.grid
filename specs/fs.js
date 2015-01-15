@@ -11,8 +11,8 @@ _.Jazz('fs.plug specification tests',function(n){
 
   n('can i read a file',function(k){
     k.async(function(d,next,g){
-      next();
       d.replies().on(g(function(f){
+        next();
         _.Expects.truthy(f);
         _.Expects.truthy(f.body);
         _.Expects.isString(f.message);
@@ -117,8 +117,8 @@ _.Jazz('fs.plug specification tests',function(n){
   n('can i read a file from base.fs',function(k){
 
     k.async(function(d,next,g){
-      next();
       d.tasks().on(g(function(t){
+        next();
         _.Expects.truthy(plug.Packets.isTask(t));
       }));
     });

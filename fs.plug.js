@@ -562,7 +562,6 @@ fsp.registerPlug('io.iodirect',function(){
 
   this.replies('ro').on(this.$bind(function(p){
     var f = this.Reply.clone(p,p.Meta.puid);
-    f.stream().on(console.log);
   }));
 
 });
