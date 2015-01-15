@@ -561,7 +561,8 @@ fsp.registerPlug('io.iodirect',function(){
   }));
 
   this.replies('ro').on(this.$bind(function(p){
-    this.Reply.clone(p,p.Meta.puid);
+    var f = this.Reply.clone(p,p.Meta.puid);
+    f.stream().on(console.log);
   }));
 
 });

@@ -26,9 +26,10 @@ _.Jazz('fs.plug specification tests',function(n){
 
     k.async(function(d,next,g){
       d.on(g(function(t){
-        console.log('reply',t.body,t.message);
+        t.stream().on(function(f){ console.log(f.toString(), _.funcs.toString(f)); });
         next();
         _.Expects.truthy(plug.Packets.isReply(t));
+        _.Expects.is(t.message,pid);
       }));
     });
 
