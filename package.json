@@ -1,6 +1,6 @@
 {
   "name": "fs.plug",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "file system plug for plug.js framework",
   "main": "./fs.plug.js",
   "scripts": {
