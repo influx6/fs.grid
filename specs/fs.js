@@ -6,7 +6,7 @@ _.Jazz('fs.plug specification tests',function(n){
 
   var io = fs.IO('io');
 
-  io.use(fs.Plug('fs.Basefs','fs.spec'),'base.fs');
+  io.use(fs.Plug('fs.base'),'base.fs');
 
 
   n('can i read a file',function(k){
@@ -95,7 +95,6 @@ _.Jazz('fs.plug specification tests',function(n){
   n('can i get the task request from base.fs for a read op',function(k){
 
     k.sync(function(d,g){
-      console.log('grid it');
       d.tasks().on(g(function(t){
         _.Expects.truthy(plug.Packets.isTask(t));
         _.Expects.truthy(t.body.file,'./poem.md');
@@ -125,8 +124,8 @@ _.Jazz('fs.plug specification tests',function(n){
     });
 
     k.for(io.get('base.fs'));
-    io.Task.make('fs.spec',{ task: 'file.read', file: './poem.md' });
-    io.Task.make('fs.spec',{ task: 'file.read', file: '../coller/../poem.md' });
+    io.Task.make('fs.base',{ task: 'file.read', file: './poem.md' });
+    io.Task.make('fs.base',{ task: 'file.read', file: '../coller/../poem.md' });
 
   });
 
