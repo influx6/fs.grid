@@ -213,12 +213,14 @@ fsp.registerPlug('file.read',function(){
       fs.readFile(ps,this.$bind(function(err,body){
         if(err){ return this.emitPacket(plug.ReplyPackets.from(p,err));}
         var m = plug.ReplyPackets.from(p,{ f:file, p: ps});
+        m.config({ f: file, p: ps });
         this.emitPacket(m);
         m.emit(body);
         m.end();
       }));
     }else{
-      this.emitPacket(plug.ReplyPackets.from(p,new Error(_.Util.String(' ',file,':',ps,' not Found'))));
+      var m = this.emitPacket(plug.ReplyPackets.from(p,new Error(_.Util.String(' ',file,':',ps,' not Found'))));
+      m.config({ f: file, p: ps });
     }
   }));
 });
