@@ -82,14 +82,14 @@ fsp.registerPlug('dir.read',function(){
     if(_.valids.not.exists(file)) return;
     ps = path.resolve(file);
     if(!fs.existsSync(ps)){
-      var r = plug.ReplyPackets.from(p,new Error(_.Util.String(' ',file,':',ps,' not Found')));
+      var r = plug.ReplyPackets.from(p,null,new Error(_.Util.String(' ',file,':',ps,' not Found')));
       this.emitPacket(r);
       return;
     }
 
     fs.readdir(ps,this.$bind(function(err,body){
-      if(err){ return this.emitPacket(plug.ReplyPackets.from(p,err));}
-      var m = this.emitPacket(plug.ReplyPackets.from(p,{ f:file, p: ps}));
+      if(err){ return this.emitPacket(plug.ReplyPackets.from(p,null,err));}
+      var m = this.emitPacket(plug.ReplyPackets.from(p,null,{ f:file, p: ps}));
       if(_.valids.List(body)){
         _.enums.each(body,function(e,i,o,fx){
           m.emit({id: e, file: path.resolve(ps,e)}); return fx(null);
@@ -111,12 +111,12 @@ fsp.registerPlug('dir.write',function(){
     if(_.valids.not.exists(file)) return;
     ps = path.resolve(file);
     if(fs.existsSync(ps)){
-      this.emitPacket(plug.ReplyPackets.from(p,new Error(_.Util.String(' ',file,':',ps,' not Found'))));
+      this.emitPacket(plug.ReplyPackets.from(p,null,new Error(_.Util.String(' ',file,':',ps,' not Found'))));
       return;
     }
     fs.mkdir(ps,this.$bind(function(err,body){
-      if(err){ return this.emitPacket(plug.ReplyPackets.from(p,err));}
-      var m = this.emitPacket(plug.ReplyPackets.from(p,{ f:file, p: ps}));
+      if(err){ return this.emitPacket(plug.ReplyPackets.from(p,null,err));}
+      var m = this.emitPacket(plug.ReplyPackets.from(p,null,{ f:file, p: ps}));
 
       // var content = p.stream();
 
@@ -132,12 +132,12 @@ fsp.registerPlug('dir.overwrite',function(){
     if(_.valids.not.exists(file)) return;
     ps = path.resolve(file);
     if(fs.existsSync(ps)){
-      this.emitPacket(plug.ReplyPackets.from(p,new Error(_.Util.String(' ',file,':',ps,' not Found'))));
+      this.emitPacket(plug.ReplyPackets.from(p,null,new Error(_.Util.String(' ',file,':',ps,' not Found'))));
       return;
     }
     fs.mkdir(ps,this.$bind(function(err,body){
-      if(err){ return this.emitPacket(plug.ReplyPackets.from(p,err));}
-      var m = this.emitPacket(plug.ReplyPackets.from(p,{ f:file, p: ps}));
+      if(err){ return this.emitPacket(plug.ReplyPackets.from(p,null,err));}
+      var m = this.emitPacket(plug.ReplyPackets.from(p,null,{ f:file, p: ps}));
       m.end();
     }));
   }));
@@ -150,12 +150,12 @@ fsp.registerPlug('dir.destroy',function(){
     if(_.valids.not.exists(file)) return;
     ps = path.resolve(file);
     if(!fs.existsSync(ps)){
-      this.emitPacket(plug.ReplyPackets.from(p,new Error(_.Util.String(' ',file,':',ps,' not Found'))));
+      this.emitPacket(plug.ReplyPackets.from(p,null,new Error(_.Util.String(' ',file,':',ps,' not Found'))));
       return;
     }
     fs.rmdir(ps,this.$bind(function(err,body){
-      if(err){ return this.emitPacket(plug.ReplyPackets.from(p,err));}
-      var m = this.emitPacket(plug.ReplyPackets.from(p,{ f:file, p: ps}));
+      if(err){ return this.emitPacket(plug.ReplyPackets.from(p,null,err));}
+      var m = this.emitPacket(plug.ReplyPackets.from(p,null,{ f:file, p: ps}));
       // m.emit(body);
       m.end();
     }));
@@ -169,12 +169,12 @@ fsp.registerPlug('io.profile',function(){
     if(_.valids.not.exists(file)) return;
     ps = path.resolve(file);
     if(!fs.existsSync(ps)){
-      this.emitPacket(plug.ReplyPackets.from(p,new Error(_.Util.String(' ',file,':',ps,' not Found'))));
+      this.emitPacket(plug.ReplyPackets.from(p,null,new Error(_.Util.String(' ',file,':',ps,' not Found'))));
       return;
     }
     fs.exists(ps,this.$bind(function(err,body){
-      if(err){ return this.emitPacket(plug.ReplyPackets.from(p,err));}
-      var m = this.emitPacket(plug.ReplyPackets.from(p,{
+      if(err){ return this.emitPacket(plug.ReplyPackets.from(p,null,err));}
+      var m = this.emitPacket(plug.ReplyPackets.from(p,null,{
         profile: profilePath(path.resolve('.',ps)),
         f:file,
         p: ps
@@ -191,12 +191,12 @@ fsp.registerPlug('io.check',function(){
     if(_.valids.not.exists(file)) return;
     ps = path.resolve(file);
     if(!fs.existsSync(ps)){
-      this.emitPacket(plug.ReplyPackets.from(p,new Error(_.Util.String(' ',file,':',ps,' not Found'))));
+      this.emitPacket(plug.ReplyPackets.from(p,null,new Error(_.Util.String(' ',file,':',ps,' not Found'))));
       return;
     }
     fs.exists(ps,this.$bind(function(err,body){
-      if(err){ return this.emitPacket(plug.ReplyPackets.from(p,err));}
-      var m = this.emitPacket(plug.ReplyPackets.from(p,{ f:file, p: ps}));
+      if(err){ return this.emitPacket(plug.ReplyPackets.from(p,null,err));}
+      var m = this.emitPacket(plug.ReplyPackets.from(p,null,{ f:file, p: ps}));
       m.end();
     }));
   }));
@@ -211,15 +211,15 @@ fsp.registerPlug('file.read',function(){
     var can = fs.existsSync(file);
     if(can){
       fs.readFile(ps,this.$bind(function(err,body){
-        if(err){ return this.emitPacket(plug.ReplyPackets.from(p,err));}
-        var m = plug.ReplyPackets.from(p,{ f:file, p: ps});
+        if(err){ return this.emitPacket(plug.ReplyPackets.from(p,null,err));}
+        var m = plug.ReplyPackets.from(p,null,{ f:file, p: ps});
         m.config({ f: file, p: ps });
         this.emitPacket(m);
         m.emit(body);
         m.end();
       }));
     }else{
-      var m = this.emitPacket(plug.ReplyPackets.from(p,new Error(_.Util.String(' ',file,':',ps,' not Found'))));
+      var m = this.emitPacket(plug.ReplyPackets.from(p,null,new Error(_.Util.String(' ',file,':',ps,' not Found'))));
       m.config({ f: file, p: ps });
     }
   }));
@@ -232,11 +232,11 @@ fsp.registerPlug('file.destroy',function(){
     if(_.valids.not.String(file)) return;
     ps = path.resolve(file);
     if(!fs.existsSync(ps)) {
-      this.emitPacket(plug.ReplyPackets.from(p,new Error(_.Util.String(' ',file,':',ps,' not Found'))));
+      this.emitPacket(plug.ReplyPackets.from(p,null,new Error(_.Util.String(' ',file,':',ps,' not Found'))));
     }
     fs.unlink(ps,this.$bind(function(err,body){
-      if(err){ return this.emitPacket(plug.ReplyPackets.from(p,err));}
-      var m = this.emitPacket(plug.ReplyPackets.from(p,{ f:file, p: ps}));
+      if(err){ return this.emitPacket(plug.ReplyPackets.from(p,null,err));}
+      var m = this.emitPacket(plug.ReplyPackets.from(p,null,{ f:file, p: ps}));
       m.emit(body);
       m.end();
     }));
@@ -250,11 +250,11 @@ fsp.registerPlug('stat',function(){
     if(_.valids.not.String(file)) return;
     ps = path.resolve(file);
     if(!fs.existsSync(ps)) {
-      this.emitPacket(plug.ReplyPackets.from(p,new Error(_.Util.String(' ',file,':',ps,' not Found'))));
+      this.emitPacket(plug.ReplyPackets.from(p,null,new Error(_.Util.String(' ',file,':',ps,' not Found'))));
     }
     fs.stat(ps,this.$bind(function(err,body){
-      if(err){ return this.emitPacket(plug.ReplyPackets.from(p,err));}
-      var m = this.emitPacket(plug.ReplyPackets.from(p,{ f:file, p: ps}));
+      if(err){ return this.emitPacket(plug.ReplyPackets.from(p,null,err));}
+      var m = this.emitPacket(plug.ReplyPackets.from(p,null,{ f:file, p: ps}));
       m.end();
     }));
   }));
@@ -267,11 +267,11 @@ fsp.registerPlug('symlink.read',function(){
     if(_.valids.not.String(file)) return;
     ps = path.resolve(file);
     if(!fs.existsSync(ps)) {
-      this.emitPacket(plug.ReplyPackets.from(p,new Error(_.Util.String(' ',file,':',ps,' not Found'))));
+      this.emitPacket(plug.ReplyPackets.from(p,null,new Error(_.Util.String(' ',file,':',ps,' not Found'))));
     }
     fs.readlink(ps,this.$bind(function(err,body){
-      if(err){ return this.emitPacket(plug.ReplyPackets.from(p,err));}
-      var m = this.emitPacket(plug.ReplyPackets.from(p,{ f:file, p: ps}));
+      if(err){ return this.emitPacket(plug.ReplyPackets.from(p,null,err));}
+      var m = this.emitPacket(plug.ReplyPackets.from(p,null,{ f:file, p: ps}));
       m.emit(body);
       m.end();
     }));
@@ -286,11 +286,11 @@ fsp.registerPlug('symlink.write',function(){
     if(_.valids.not.String(src) || _.valids.not.String(dest)) return;
     var ps = path.resolve(src), pd = path.resolve(dest);
     if(!fs.existsSync(ps)) {
-      this.emitPacket(plug.ReplyPackets.from(p,new Error(_.Util.String(' ',file,':',ps,' not Found'))));
+      this.emitPacket(plug.ReplyPackets.from(p,null,new Error(_.Util.String(' ',file,':',ps,' not Found'))));
     }
     fs.link(ps,pd,this.$bind(function(err,body){
-      if(err){ return this.emitPacket(plug.ReplyPackets.from(p,err));}
-      var m = this.emitPacket(plug.ReplyPackets.from(p,{ f:file, p: ps}));
+      if(err){ return this.emitPacket(plug.ReplyPackets.from(p,null,err));}
+      var m = this.emitPacket(plug.ReplyPackets.from(p,null,{ f:file, p: ps}));
       m.emit(body);
       m.end();
     }));
@@ -312,8 +312,8 @@ fsp.registerPlug('file.write.new',function(){
 
     stream.afterEvent('dataEnd',this.$bind(function(){
       fs.writeFile(ps,data.join(''),ops,this.$bind(function(err,d){
-      if(err){ return this.emitPacket(plug.ReplyPackets.from(p,err));}
-      var m = this.emitPacket(plug.ReplyPackets.from(p,{ f:file, res: d}));
+      if(err){ return this.emitPacket(plug.ReplyPackets.from(p,null,err));}
+      var m = this.emitPacket(plug.ReplyPackets.from(p,null,{ f:file, res: d}));
       }));
     }));
 
@@ -334,8 +334,8 @@ fsp.registerPlug('file.write.append',function(){
 
     stream.afterEvent('dataEnd',this.$bind(function(){
       fs.appendFile(ps,data.join(''),ops,this.$bind(function(err,d){
-      if(err){ return this.emitPacket(plug.ReplyPackets.from(p,err));}
-      var m = this.emitPacket(plug.ReplyPackets.from(p,{ f:file, res: d}));
+      if(err){ return this.emitPacket(plug.ReplyPackets.from(p,null,err));}
+      var m = this.emitPacket(plug.ReplyPackets.from(p,null,{ f:file, res: d}));
       }));
     }));
 
