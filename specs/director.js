@@ -4,9 +4,8 @@ var fs = require('../fs.grid.js');
 
 _.Jazz('fs.plug specification tests',function(n){
 
-  var read = fs.bp.ioReadDirector({ base: '..' });
-  var write = fs.bp.fileWriteNew({ name: 'writer' });
-  var append = fs.bp.fileWriteAppend({ name: 'append' });
+  var dir = fs.bp.ioReadDirector({ base: '..' });
+  var write = fs.bp.ioWriteDirector({ base: '..' });
 
   n('can i read a file',function(k){
     k.async(function(d,next,g){
@@ -20,7 +19,7 @@ _.Jazz('fs.plug specification tests',function(n){
   }).use(read);
 
   n('can i write a file',function(k){
-      write.in().on(function(f){
+      write.in('file').on(function(f){
         k.async(function(d,next,g){
           next();
           _.Expects.truthy(f);
@@ -28,7 +27,7 @@ _.Jazz('fs.plug specification tests',function(n){
         });
       });
 
-    write.in().Packets.make({ file: './poem.md'})
+    write.in('file').Packets.make({ file: './specs/pork.md'})
     .emit('#oh God!,i Seek you!')
     .emit('\n')
     .emit('\n')
@@ -46,32 +45,5 @@ _.Jazz('fs.plug specification tests',function(n){
     .end();
 
   }).use(write);
-
-  n('can i append a file',function(k){
-      append.in().on(function(f){
-        k.async(function(d,next,g){
-          next();
-          _.Expects.truthy(f);
-          _.Expects.isObject(f.body);
-        });
-      });
-
-    append.in().Packets.make({ file: './poem.md'})
-    .emit('#Forever oh God!,i wait for you!')
-    .emit('\n')
-    .emit('\n')
-    .emit('with joy unseizing upon this earth')
-    .emit('\n')
-    .emit('to see you, know you and walk with you')
-    .emit('\n')
-    .emit('for by you i have found where i belong')
-    .emit('\n')
-    .emit('in your presence oh God, Lord and father')
-    .emit('\n')
-    .emit('\n')
-    .end();
-
-  }).use(append);
-
 
 });
