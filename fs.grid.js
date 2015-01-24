@@ -1,7 +1,7 @@
 var _ = require("stackq"),
     fs = require('graceful-fs'),
     path = require('path'),
-    grid = require("grid")
+    grid = require("grids")
     io = module.exports = {};
 
 /*
@@ -201,6 +201,11 @@ io.bp.fileRead = grid.Atomic.Blueprint('file.read',function(){
     var b = p.body, file = b.file, ps;
     if(_.valids.not.String(file)) return;
     ps = path.resolve(file);
+
+    if(ps === path.resolve('.')){
+      return this.out('err').Packets.clone(p,new Error('root directory is not a file'));
+    }
+
     var can = fs.existsSync(file);
     if(can){
       fs.readFile(ps,this.$bind(function(err,body){
@@ -225,6 +230,9 @@ io.bp.fileDestroy = grid.Blueprint('file.destroy',function(){
     var b = p.body, file = b.file, ps;
     if(_.valids.not.String(file)) return;
     ps = path.resolve(file);
+    if(ps === path.resolve('.')){
+      return this.out('err').Packets.clone(p,new Error('root directory is not a file'));
+    }
     if(!fs.existsSync(ps)) {
       return this.out('err').Packets.clone(p,new Error(_.Util.String(' ',file,':',ps,' not Found')));
     }
@@ -244,6 +252,9 @@ io.bp.fileWriteNew = grid.Blueprint('file.write.new',function(){
     if(_.valids.not.String(file)) return;
     var ops = _.funcs.extends({flag:'w'},d.options);
     var ps = path.resolve(file);
+    if(ps === path.resolve('.')){
+      return this.out('err').Packets.clone(p,new Error('root directory is not a file'));
+    }
     stream.on(function(f){
       if(_.valids.isList(f)) data = data.concat(f);
       data.push(f);
@@ -267,6 +278,10 @@ io.bp.fileWriteAppend = grid.Blueprint('file.write.append',function(){
     if(_.valids.not.String(file)) return;
     var ops = _.funcs.extends({flag:'a'},d.options);
     var ps = path.resolve(file);
+    if(ps === path.resolve('.')){
+      return this.out('err').Packets.clone(p,new Error('root directory is not a file'));
+    }
+
     stream.on(function(f){
       if(_.valids.isList(f)) data = data.concat(f);
       data.push(f);

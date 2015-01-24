@@ -1,5 +1,5 @@
 var _ = require('stackq');
-var plug = require('grid');
+var grid = require('grids');
 var fs = require('../fs.grid.js');
 
 _.Jazz('fs.plug specification tests',function(n){
