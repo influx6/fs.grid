@@ -34,7 +34,6 @@ io.misc.profilePath = function(base,file,fz){
       try{
        stat = fs.statSync(prf);
       }catch(e){
-        console.log('err:',e);
        stat = null;
       }
     };
@@ -212,7 +211,7 @@ io.bp.fileRead = grid.Atomic.Blueprint('file.read',function(){
         if(err){
           return this.out('err').Packets.clone(p,err);
         }
-        var m = this.out().Packets.make({ f:file, p: ps});
+        var m = this.out().Packets.clone(p);
         m.config({ f: file, p: ps });
         m.emit(body);
         m.end();
@@ -385,28 +384,35 @@ io.bp.ioControlReader = io.bp.ioControllable.Blueprint('io.control.reader',funct
   this.in('dir').on(this.$bind(function(p){
     if(_.valids.not.contains(p.body,'file')) return;
     var f, body = p.body, file = body.file, stat = body.stat;
+   
+    if(!stat){
+      var f = this.out('err').Packets.clone(p,new Error('Unable to profile'+': '+file));
+      p.procd = true;
+      return;
+    }
 
     if(stat){
       if(stat.isDirectory()){
         f = p.link(this.out('dir').Packets.make({ '$filter': 'dir.read', file: file}));
         f.config(body);
       }
-    }else{
-      this.out('err').Packets.clone(p,new Error('Unable to profile'+': '+file));
-    }
-  }))
+    } 
+  }));
   this.in('file').on(this.$bind(function(p){
     if(_.valids.not.contains(p.body,'file')) return;
     var f, body = p.body, file = body.file, stat = body.stat;
+
+    if(!stat && !p.procd){
+      var f = this.out('err').Packets.clone(p,new Error('Unable to profile'+': '+file));
+      return;
+    }
 
     if(stat){
       if(stat.isFile()){
         f = p.link(this.out('file').Packets.make({ '$filter': 'file.read', file: file }));
         f.config(body);
       }
-    }else{
-      this.out('err').Packets.clone(p,new Error('Unable to profile'+': '+file));
-    }
+    } 
   }))
 });
 
@@ -493,6 +499,8 @@ io.bp.ioCheckDirector = io.bp.ioControllable.Blueprint('ioCheckDirector',functio
   var dc = io.bp.dirControl({ base: this.getConfigAttr('base') }),
       rc = io.bp.ioControlChecker({});
 
+  dc.ao(this,'err','err');
+  rc.ao(this,'err','err')
   this.ai(dc,null,'file');
   this.ai(dc,null,'dir');
 
@@ -509,6 +517,8 @@ io.bp.ioProfileDirector = io.bp.ioControllable.Blueprint('ioProfileDirector',fun
   var dc = io.bp.dirControl({ base: this.getConfigAttr('base') }),
       rc = io.bp.ioControlProfiler({});
 
+  dc.ao(this,'err','err');
+  rc.ao(this,'err','err')
   this.ai(dc,null,'file');
   this.ai(dc,null,'dir');
 
@@ -525,6 +535,8 @@ io.bp.ioDestroyDirector = io.bp.ioControllable.Blueprint('ioDestroyDirector',fun
   var dc = io.bp.dirControl({ base: this.getConfigAttr('base') }),
       rc = io.bp.ioControlDestroyer({});
 
+  dc.ao(this,'err','err');
+  rc.ao(this,'err','err')
   this.ai(dc,null,'file');
   this.ai(dc,null,'dir');
 
@@ -544,6 +556,8 @@ io.bp.ioAppendDirector = io.bp.ioControllable.Blueprint('ioAppendDirector',funct
   this.ai(dc,null,'file');
   this.ai(dc,null,'dir');
 
+  dc.ao(this,'err','err');
+  rc.ao(this,'err','err')
   dc.a(rc,'file');
   dc.a(rc,'dir');
 
@@ -556,6 +570,9 @@ io.bp.ioWriteDirector = io.bp.ioControllable.Blueprint('ioWriteDirector',functio
 
   var dc = io.bp.dirControl({ base: this.getConfigAttr('base') }),
       rc = io.bp.ioControlWriter({});
+
+  dc.ao(this,'err','err');
+  rc.ao(this,'err','err')
 
   this.ai(dc,null,'file');
   this.ai(dc,null,'dir');
@@ -573,6 +590,9 @@ io.bp.ioReadDirector = io.bp.ioControllable.Blueprint('ioReadDirector',function(
   var dc = io.bp.dirControl({ base: this.getConfigAttr('base') }),
       rc = io.bp.ioControlReader({});
 
+  dc.ao(this,'err','err');
+  rc.ao(this,'err','err')
+	
   this.ai(dc,null,'file');
   this.ai(dc,null,'dir');
 
